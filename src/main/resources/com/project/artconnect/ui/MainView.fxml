@@ -13,7 +13,7 @@
             <MenuItem text="About"/>
         </Menu>
     </MenuBar>
-    
+
     <TabPane fx:id="mainTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
         <Tab text="Discover">
             <fx:include source="DiscoverTab.fxml"/>
@@ -36,12 +36,15 @@
         <Tab text="Community">
             <fx:include source="CommunityTab.fxml"/>
         </Tab>
+        <Tab text="📊 Analytics">
+            <fx:include source="AnalyticsTab.fxml"/>
+        </Tab>
     </TabPane>
-    
+
     <HBox alignment="CENTER_RIGHT" prefHeight="30.0" style="-fx-background-color: #f0f0f0;">
         <padding>
             <Insets right="10.0" left="10.0"/>
         </padding>
-        <Label text="ArtConnect Pro v1.0 | Mode: In-Memory"/>
+        <Label text="ArtConnect Pro v1.0 | Mode: Database"/>
     </HBox>
 </VBox>

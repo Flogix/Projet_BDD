@@ -2,41 +2,163 @@ package com.project.artconnect.persistence;
 
 import com.project.artconnect.dao.ArtistDao;
 import com.project.artconnect.model.Artist;
+import com.project.artconnect.model.Discipline;
+import com.project.artconnect.util.ConnectionManager;
+
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * JDBC implementation for ArtistDao.
- * TODO: Students must implement this using JDBC and SQL.
+ * Implémentation JDBC de ArtistDao.
+ *
+ * Table cible : artiste (id_artiste, nom, prenom, annee_naissance, email, ville, discipline)
+ *
+ * Note sur le nom : en base, le nom est stocké en deux colonnes "nom" et "prenom".
+ * Dans le modèle Java, Artist.name contient "nom prenom" (concaténé).
+ * On sépare sur le premier espace pour écrire en base.
  */
 public class JdbcArtistDao implements ArtistDao {
 
+    // ── Lecture ──────────────────────────────────────────────────────────────
+
     @Override
     public List<Artist> findAll() {
-        // TODO: Implement SELECT * FROM artist
-        throw new UnsupportedOperationException("JDBC Implementation not yet provided.");
-    }
+        List<Artist> artists = new ArrayList<>();
+        String sql = "SELECT nom, prenom, annee_naissance, email, ville, discipline FROM artiste";
 
-    @Override
-    public void save(Artist artist) {
-        // TODO: Implement INSERT INTO artist(...) VALUES(...)
-        throw new UnsupportedOperationException("JDBC Implementation not yet provided.");
-    }
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
 
-    @Override
-    public void update(Artist artist) {
-        // TODO: Implement UPDATE artist SET ... WHERE name = ?
-        throw new UnsupportedOperationException("JDBC Implementation not yet provided.");
-    }
+            while (rs.next()) {
+                artists.add(mapRow(rs));
+            }
 
-    @Override
-    public void delete(String artistName) {
-        // TODO: Implement DELETE FROM artist WHERE name = ?
-        throw new UnsupportedOperationException("JDBC Implementation not yet provided.");
+        } catch (SQLException e) {
+            System.err.println("[JdbcArtistDao] findAll() : " + e.getMessage());
+        }
+        return artists;
     }
 
     @Override
     public List<Artist> findByCity(String city) {
-        // TODO: Implement SELECT * FROM artist WHERE city = ?
-        throw new UnsupportedOperationException("JDBC Implementation not yet provided.");
+        List<Artist> artists = new ArrayList<>();
+        String sql = "SELECT nom, prenom, annee_naissance, email, ville, discipline FROM artiste WHERE ville = ?";
+
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, city);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    artists.add(mapRow(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("[JdbcArtistDao] findByCity() : " + e.getMessage());
+        }
+        return artists;
+    }
+
+    // ── Écriture ─────────────────────────────────────────────────────────────
+
+    @Override
+    public void save(Artist artist) {
+        String[] parts = splitName(artist.getName());
+        String discipline = artist.getDisciplines().isEmpty()
+                ? null : artist.getDisciplines().get(0).getName();
+
+        String sql = "INSERT INTO artiste (nom, prenom, annee_naissance, email, ville, discipline) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, parts[0]);
+            stmt.setString(2, parts[1].isBlank() ? null : parts[1]);
+            stmt.setObject(3, artist.getBirthYear());   // null si non renseigné
+            stmt.setString(4, artist.getContactEmail());
+            stmt.setString(5, artist.getCity());
+            stmt.setString(6, discipline);
+
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("[JdbcArtistDao] save() : " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void update(Artist artist) {
+        String[] parts = splitName(artist.getName());
+        String discipline = artist.getDisciplines().isEmpty()
+                ? null : artist.getDisciplines().get(0).getName();
+
+        // On identifie l'artiste par son email (clé unique en base)
+        String sql = "UPDATE artiste SET nom = ?, prenom = ?, ville = ?, discipline = ?, annee_naissance = ? WHERE email = ?";
+
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, parts[0]);
+            stmt.setString(2, parts[1].isBlank() ? null : parts[1]);
+            stmt.setString(3, artist.getCity());
+            stmt.setString(4, discipline);
+            stmt.setObject(5, artist.getBirthYear());
+            stmt.setString(6, artist.getContactEmail());
+
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("[JdbcArtistDao] update() : " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void delete(String artistName) {
+        String[] parts = splitName(artistName);
+        String sql = "DELETE FROM artiste WHERE nom = ? AND (prenom = ? OR prenom IS NULL)";
+
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, parts[0]);
+            stmt.setString(2, parts[1].isBlank() ? null : parts[1]);
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("[JdbcArtistDao] delete() : " + e.getMessage());
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /** Construit un Artist depuis une ligne ResultSet. */
+    private Artist mapRow(ResultSet rs) throws SQLException {
+        Artist artist = new Artist();
+
+        String nom    = rs.getString("nom");
+        String prenom = rs.getString("prenom");
+        artist.setName(nom + (prenom != null && !prenom.isBlank() ? " " + prenom : ""));
+        artist.setCity(rs.getString("ville"));
+        artist.setContactEmail(rs.getString("email"));
+
+        int annee = rs.getInt("annee_naissance");
+        if (!rs.wasNull()) artist.setBirthYear(annee);
+
+        String discipline = rs.getString("discipline");
+        if (discipline != null && !discipline.isBlank()) {
+            artist.getDisciplines().add(new Discipline(discipline));
+        }
+        return artist;
+    }
+
+    /** Découpe "Nom Prenom" → ["Nom", "Prenom"]. Retourne ["Nom",""] si pas d'espace. */
+    private String[] splitName(String fullName) {
+        if (fullName == null || fullName.isBlank()) return new String[]{"", ""};
+        int idx = fullName.indexOf(' ');
+        if (idx == -1) return new String[]{fullName, ""};
+        return new String[]{fullName.substring(0, idx), fullName.substring(idx + 1)};
     }
 }
