@@ -6,11 +6,19 @@ import com.project.artconnect.service.ArtistService;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.project.artconnect.dao.ArtistDao;
+
 public class InMemoryArtistService implements ArtistService {
     private final Map<String, Artist> artists = new LinkedHashMap<>();
     private final Map<String, Discipline> disciplines = new LinkedHashMap<>();
+    private ArtistDao artistDao;
 
     public InMemoryArtistService() {
+        // Pour la compatibilité si besoin, mais on préfère passer le DAO
+    }
+
+    public InMemoryArtistService(ArtistDao artistDao) {
+        this.artistDao = artistDao;
         initData();
     }
 
@@ -62,16 +70,25 @@ public class InMemoryArtistService implements ArtistService {
     @Override
     public void createArtist(Artist artist) {
         artists.put(artist.getName(), artist);
+        if (artistDao != null) {
+            artistDao.save(artist);
+        }
     }
 
     @Override
     public void updateArtist(Artist artist) {
         artists.put(artist.getName(), artist);
+        if (artistDao != null) {
+            artistDao.update(artist);
+        }
     }
 
     @Override
     public void deleteArtist(String name) {
         artists.remove(name);
+        if (artistDao != null) {
+            artistDao.delete(name);
+        }
     }
 
     @Override

@@ -33,9 +33,9 @@
                 <ComboBox  fx:id="fieldStatus"     promptText="Statut"                    prefWidth="130"/>
             </HBox>
             <HBox spacing="10.0">
-                <Button text="➕ Ajouter"    onAction="#handleAdd"    style="-fx-background-color:#27ae60;-fx-text-fill:white;"/>
-                <Button text="✏️ Modifier"   onAction="#handleUpdate" style="-fx-background-color:#2980b9;-fx-text-fill:white;"/>
-                <Button text="🗑️ Supprimer" onAction="#handleDelete" style="-fx-background-color:#e74c3c;-fx-text-fill:white;"/>
+                <Button text="➕ Ajouter" onAction="#handleAdd" styleClass="button-add"/>
+                <Button text="✏️ Modifier" onAction="#handleUpdate" styleClass="button-edit"/>
+                <Button text="🗑️ Supprimer" onAction="#handleDelete" styleClass="button-delete"/>
             </HBox>
         </VBox>
     </TitledPane>

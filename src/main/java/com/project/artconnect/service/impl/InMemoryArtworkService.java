@@ -6,11 +6,18 @@ import com.project.artconnect.service.ArtistService;
 import com.project.artconnect.service.ArtworkService;
 import java.util.*;
 
+import com.project.artconnect.dao.ArtworkDao;
+
 public class InMemoryArtworkService implements ArtworkService {
     private final Map<String, Artwork> artworks = new LinkedHashMap<>();
+    private ArtworkDao artworkDao;
 
     public InMemoryArtworkService() {
         // Data initialized after ArtistService is ready
+    }
+
+    public InMemoryArtworkService(ArtworkDao artworkDao) {
+        this.artworkDao = artworkDao;
     }
 
     public void initData(ArtistService artistService) {
@@ -59,15 +66,24 @@ public class InMemoryArtworkService implements ArtworkService {
     @Override
     public void createArtwork(Artwork artwork) {
         artworks.put(artwork.getTitle(), artwork);
+        if (artworkDao != null) {
+            artworkDao.save(artwork);
+        }
     }
 
     @Override
     public void updateArtwork(Artwork artwork) {
         artworks.put(artwork.getTitle(), artwork);
+        if (artworkDao != null) {
+            artworkDao.update(artwork);
+        }
     }
 
     @Override
     public void deleteArtwork(String title) {
         artworks.remove(title);
+        if (artworkDao != null) {
+            artworkDao.delete(title);
+        }
     }
 }

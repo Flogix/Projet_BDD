@@ -18,9 +18,12 @@ C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\service
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\ui\ExhibitionController.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\util\ServiceProvider.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\model\Artist.java
+C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\SchemaExplorer.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\ui\ArtworkController.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\ui\WorkshopController.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\ui\ArtistController.java
+C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\persistence\JdbcExhibitionDao.java
+C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\persistence\JdbcGalleryDao.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\dao\WorkshopDao.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\persistence\JdbcArtistDao.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\service\impl\InMemoryArtistService.java
@@ -39,4 +42,5 @@ C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\util\Co
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\model\Booking.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\ui\AnalyticsController.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\dao\GalleryDao.java
+C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\persistence\JdbcWorkshopDao.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\service\ArtistService.java

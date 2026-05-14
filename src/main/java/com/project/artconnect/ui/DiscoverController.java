@@ -22,13 +22,7 @@ public class DiscoverController {
 
     @FXML
     public void initialize() {
-        // Collect some exhibitions from galleries
-        List<Exhibition> featuredExhibitions = new ArrayList<>();
-        for (Gallery g : galleryService.getAllGalleries()) {
-            featuredExhibitions.addAll(g.getExhibitions());
-            if (featuredExhibitions.size() >= 3)
-                break;
-        }
+        List<Exhibition> featuredExhibitions = galleryService.getAllExhibitions();
 
         featuredExhibitions.stream().limit(3).forEach(this::addExhibitionCard);
         workshopService.getAllWorkshops().stream().limit(3).forEach(this::addWorkshopCard);

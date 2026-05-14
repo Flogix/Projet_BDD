@@ -14,7 +14,25 @@
             <TableColumn fx:id="instructorColumn" text="Instructor" prefWidth="150" />
             <TableColumn fx:id="dateColumn" text="Date" prefWidth="150" />
             <TableColumn fx:id="priceColumn" text="Price" prefWidth="80" />
-            <TableColumn fx:id="levelColumn" text="Level" prefWidth="100" />
         </columns>
     </TableView>
+
+    <TitledPane text="Ajouter / Modifier un atelier" expanded="false">
+        <VBox spacing="8.0">
+            <padding><Insets bottom="8.0" left="8.0" right="8.0" top="8.0"/></padding>
+            <HBox spacing="10.0">
+                <TextField fx:id="fieldTitle" promptText="Titre de l'atelier" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="fieldInstructor" promptText="Nom de l'artiste" HBox.hgrow="ALWAYS"/>
+                <DatePicker fx:id="fieldDate" promptText="Date" prefWidth="130"/>
+                <TextField fx:id="fieldPrice" promptText="Prix" prefWidth="80"/>
+            </HBox>
+            <HBox spacing="10.0">
+                <Button text="➕ Ajouter" onAction="#handleAdd" styleClass="button-add"/>
+                <Button text="✏️ Modifier" onAction="#handleUpdate" styleClass="button-edit"/>
+                <Button text="🗑️ Supprimer" onAction="#handleDelete" styleClass="button-delete"/>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="💰 Calculer Revenu Max" onAction="#handleCalculateRevenue" style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
+        </VBox>
+    </TitledPane>
 </VBox>

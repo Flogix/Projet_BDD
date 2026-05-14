@@ -4,6 +4,7 @@ com\project\artconnect\persistence\JdbcArtworkDao$1.class
 com\project\artconnect\model\Artwork.class
 com\project\artconnect\model\CommunityMember.class
 com\project\artconnect\persistence\JdbcArtworkDao.class
+com\project\artconnect\persistence\JdbcGalleryDao.class
 com\project\artconnect\service\impl\InMemoryCommunityService.class
 com\project\artconnect\dao\ArtistDao.class
 com\project\artconnect\dao\ArtworkDao.class
@@ -17,6 +18,7 @@ com\project\artconnect\model\Review.class
 com\project\artconnect\ui\ArtistController.class
 com\project\artconnect\dao\GalleryDao.class
 com\project\artconnect\Launcher.class
+com\project\artconnect\persistence\JdbcWorkshopDao.class
 com\project\artconnect\service\impl\InMemoryArtistService.class
 com\project\artconnect\ui\ArtistController$2.class
 com\project\artconnect\ui\GalleryController.class
@@ -25,15 +27,16 @@ com\project\artconnect\ui\DiscoverController.class
 com\project\artconnect\util\ConnectionManager.class
 com\project\artconnect\ui\DiscoverController$2.class
 com\project\artconnect\util\ServiceProvider.class
+com\project\artconnect\SchemaExplorer.class
 com\project\artconnect\model\ArtworkTag.class
 com\project\artconnect\service\impl\InMemoryWorkshopService.class
+com\project\artconnect\persistence\JdbcExhibitionDao.class
 com\project\artconnect\ui\ArtworkController$1.class
 com\project\artconnect\service\GalleryService.class
 com\project\artconnect\dao\CommunityMemberDao.class
 com\project\artconnect\MainApp.class
 com\project\artconnect\model\Artist.class
 com\project\artconnect\service\CommunityService.class
-com\project\artconnect\ui\GalleryController$1.class
 com\project\artconnect\ui\ArtistController$1.class
 com\project\artconnect\model\Booking.class
 com\project\artconnect\ui\MainController.class

@@ -14,4 +14,12 @@ public interface WorkshopService {
     void bookWorkshop(Workshop workshop, CommunityMember member);
 
     List<Booking> getBookingsByMember(CommunityMember member);
+
+    void saveWorkshop(Workshop workshop);
+
+    void updateWorkshop(Workshop workshop);
+
+    void deleteWorkshop(String title);
+
+    double calculateMaxRevenue(String title);
 }

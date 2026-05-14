@@ -34,25 +34,30 @@ public class ServiceProvider {
     // ── Instanciation des DAO JDBC ─────────────────────────────────────────
     private static final JdbcArtistDao  jdbcArtistDao  = new JdbcArtistDao();
     private static final JdbcArtworkDao jdbcArtworkDao = new JdbcArtworkDao();
+    private static final com.project.artconnect.persistence.JdbcGalleryDao jdbcGalleryDao = new com.project.artconnect.persistence.JdbcGalleryDao();
+    private static final com.project.artconnect.persistence.JdbcExhibitionDao jdbcExhibitionDao = new com.project.artconnect.persistence.JdbcExhibitionDao();
+    private static final com.project.artconnect.persistence.JdbcWorkshopDao jdbcWorkshopDao = new com.project.artconnect.persistence.JdbcWorkshopDao();
 
-    // ── Services : Artist et Artwork chargés depuis la base ───────────────
+    // ── Services : chargés depuis la base ───────────────
     private static final InMemoryArtistService artistService;
     private static final InMemoryArtworkService artworkService;
+    private static final InMemoryGalleryService galleryService;
+    private static final InMemoryWorkshopService workshopService;
 
     // ── Services restants : toujours InMemory ─────────────────────────────
-    private static final InMemoryGalleryService   galleryService   = new InMemoryGalleryService();
-    private static final InMemoryWorkshopService  workshopService  = new InMemoryWorkshopService();
     private static final InMemoryCommunityService communityService = new InMemoryCommunityService();
 
     static {
         // Crée les services et les pré-charge avec les données de la base
-        artistService  = new InMemoryArtistService();
-        artworkService = new InMemoryArtworkService();
+        artistService  = new InMemoryArtistService(jdbcArtistDao);
+        artworkService = new InMemoryArtworkService(jdbcArtworkDao);
+        galleryService = new InMemoryGalleryService(jdbcGalleryDao, jdbcExhibitionDao);
+        workshopService = new InMemoryWorkshopService(jdbcWorkshopDao);
 
         // Remplace les données en mémoire par celles issues de la base
         loadFromDatabase();
 
-        // Initialise les services dépendants (Gallery, Workshop, Community)
+        // Initialise les services dépendants (Community)
         // avec les données artistes/œuvres déjà chargées
         artworkService.initData(artistService);
         galleryService.initData(artworkService);
@@ -82,6 +87,14 @@ public class ServiceProvider {
         } catch (Exception e) {
             System.err.println("[ServiceProvider] Impossible de charger les œuvres : " + e.getMessage());
             System.err.println("[ServiceProvider] Utilisation des données en mémoire pour les œuvres.");
+        }
+        
+        try {
+            // Charge les galeries depuis la base
+            jdbcGalleryDao.findAll().forEach(galleryService::createGallery);
+            System.out.println("[ServiceProvider] Galeries chargées depuis la base.");
+        } catch (Exception e) {
+            System.err.println("[ServiceProvider] Impossible de charger les galeries : " + e.getMessage());
         }
     }
 
