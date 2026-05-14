@@ -36,6 +36,7 @@ C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\model\R
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\dao\ArtistDao.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\dao\CommunityMemberDao.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\model\Workshop.java
+C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\persistence\JdbcCommunityMemberDao.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\service\CommunityService.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\service\impl\InMemoryGalleryService.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\util\ConnectionManager.java

@@ -10,9 +10,27 @@
     </padding>
     <TableView fx:id="memberTable" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="nameColumn" text="Name" prefWidth="250" />
+            <TableColumn fx:id="nameColumn" text="Nom" prefWidth="250" />
             <TableColumn fx:id="emailColumn" text="Email" prefWidth="250" />
-            <TableColumn fx:id="cityColumn" text="City" prefWidth="150" />
+            <TableColumn fx:id="cityColumn" text="Ville" prefWidth="150" />
         </columns>
     </TableView>
+
+    <!-- Formulaire d'ajout / modification -->
+    <TitledPane text="Ajouter / Modifier un visiteur" expanded="false">
+        <VBox spacing="8.0">
+            <padding><Insets bottom="8.0" left="8.0" right="8.0" top="8.0"/></padding>
+            <HBox spacing="10.0">
+                <TextField fx:id="fieldName" promptText="Nom complet" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="fieldEmail" promptText="Email" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="fieldCity" promptText="Ville" HBox.hgrow="ALWAYS"/>
+            </HBox>
+            <HBox spacing="10.0">
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="➕ Ajouter" onAction="#handleAdd" styleClass="button-add"/>
+                <Button text="✏️ Modifier" onAction="#handleUpdate" styleClass="button-edit"/>
+                <Button text="🗑️ Supprimer" onAction="#handleDelete" styleClass="button-delete"/>
+            </HBox>
+        </VBox>
+    </TitledPane>
 </VBox>

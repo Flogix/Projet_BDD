@@ -1,5 +1,6 @@
 package com.project.artconnect.service.impl;
 
+import com.project.artconnect.dao.CommunityMemberDao;
 import com.project.artconnect.model.CommunityMember;
 import com.project.artconnect.model.Review;
 import com.project.artconnect.model.Artwork;
@@ -9,11 +10,18 @@ import java.util.*;
 
 public class InMemoryCommunityService implements CommunityService {
     private final Map<String, CommunityMember> members = new LinkedHashMap<>();
+    private final CommunityMemberDao communityMemberDao;
+
+    public InMemoryCommunityService(CommunityMemberDao dao) {
+        this.communityMemberDao = dao;
+    }
 
     public InMemoryCommunityService() {
+        this.communityMemberDao = null;
     }
 
     public void initData(ArtworkService artworkService) {
+        if (communityMemberDao != null) return;
         CommunityMember alice = addMember("Alice Wonderland", "alice@art.com", "Paris");
         CommunityMember bob = addMember("Bob Ross", "bob@happytrees.com", "London");
         CommunityMember charlie = addMember("Charlie Brown", "charlie@peanuts.com", "New York");
@@ -40,11 +48,17 @@ public class InMemoryCommunityService implements CommunityService {
 
     @Override
     public List<CommunityMember> getAllMembers() {
+        if (communityMemberDao != null) {
+            return communityMemberDao.findAll();
+        }
         return new ArrayList<>(members.values());
     }
 
     @Override
     public Optional<CommunityMember> getMemberByName(String name) {
+        if (communityMemberDao != null) {
+            return communityMemberDao.findAll().stream().filter(m -> m.getName().equals(name)).findFirst();
+        }
         return Optional.ofNullable(members.get(name));
     }
 
@@ -53,5 +67,32 @@ public class InMemoryCommunityService implements CommunityService {
         if (member == null)
             return Collections.emptyList();
         return member.getReviews();
+    }
+
+    @Override
+    public void saveMember(CommunityMember member) {
+        if (communityMemberDao != null) {
+            communityMemberDao.save(member);
+        } else {
+            members.put(member.getName(), member);
+        }
+    }
+
+    @Override
+    public void updateMember(CommunityMember member) {
+        if (communityMemberDao != null) {
+            communityMemberDao.update(member);
+        } else {
+            members.put(member.getName(), member);
+        }
+    }
+
+    @Override
+    public void deleteMember(String email) {
+        if (communityMemberDao != null) {
+            communityMemberDao.delete(email);
+        } else {
+            members.values().removeIf(m -> email.equals(m.getEmail()));
+        }
     }
 }

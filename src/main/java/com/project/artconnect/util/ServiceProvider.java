@@ -37,6 +37,7 @@ public class ServiceProvider {
     private static final com.project.artconnect.persistence.JdbcGalleryDao jdbcGalleryDao = new com.project.artconnect.persistence.JdbcGalleryDao();
     private static final com.project.artconnect.persistence.JdbcExhibitionDao jdbcExhibitionDao = new com.project.artconnect.persistence.JdbcExhibitionDao();
     private static final com.project.artconnect.persistence.JdbcWorkshopDao jdbcWorkshopDao = new com.project.artconnect.persistence.JdbcWorkshopDao();
+    private static final com.project.artconnect.persistence.JdbcCommunityMemberDao jdbcCommunityMemberDao = new com.project.artconnect.persistence.JdbcCommunityMemberDao();
 
     // ── Services : chargés depuis la base ───────────────
     private static final InMemoryArtistService artistService;
@@ -45,7 +46,7 @@ public class ServiceProvider {
     private static final InMemoryWorkshopService workshopService;
 
     // ── Services restants : toujours InMemory ─────────────────────────────
-    private static final InMemoryCommunityService communityService = new InMemoryCommunityService();
+    private static final InMemoryCommunityService communityService;
 
     static {
         // Crée les services et les pré-charge avec les données de la base
@@ -53,6 +54,7 @@ public class ServiceProvider {
         artworkService = new InMemoryArtworkService(jdbcArtworkDao);
         galleryService = new InMemoryGalleryService(jdbcGalleryDao, jdbcExhibitionDao);
         workshopService = new InMemoryWorkshopService(jdbcWorkshopDao);
+        communityService = new InMemoryCommunityService(jdbcCommunityMemberDao);
 
         // Remplace les données en mémoire par celles issues de la base
         loadFromDatabase();
@@ -95,6 +97,14 @@ public class ServiceProvider {
             System.out.println("[ServiceProvider] Galeries chargées depuis la base.");
         } catch (Exception e) {
             System.err.println("[ServiceProvider] Impossible de charger les galeries : " + e.getMessage());
+        }
+
+        try {
+            // Charge les visiteurs depuis la base
+            jdbcCommunityMemberDao.findAll().forEach(communityService::saveMember);
+            System.out.println("[ServiceProvider] Visiteurs chargés depuis la base.");
+        } catch (Exception e) {
+            System.err.println("[ServiceProvider] Impossible de charger les visiteurs : " + e.getMessage());
         }
     }
 
