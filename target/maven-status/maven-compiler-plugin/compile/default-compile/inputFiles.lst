@@ -28,6 +28,7 @@ C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\service
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\model\Discipline.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\service\impl\InMemoryCommunityService.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\ui\DiscoverController.java
+C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\Launcher.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\model\Review.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\dao\ArtistDao.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\dao\CommunityMemberDao.java
@@ -36,5 +37,6 @@ C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\service
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\service\impl\InMemoryGalleryService.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\util\ConnectionManager.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\model\Booking.java
+C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\ui\AnalyticsController.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\dao\GalleryDao.java
 C:\Users\flogi\Downloads\Projet_BDD\src\main\java\com\project\artconnect\service\ArtistService.java

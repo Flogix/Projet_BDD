@@ -52,7 +52,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.project.artconnect.MainApp</mainClass>
+                            <mainClass>com.project.artconnect.Launcher</mainClass>
                         </configuration>
                     </execution>
                 </executions>
