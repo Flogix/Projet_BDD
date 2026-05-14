@@ -48,7 +48,8 @@ public class JdbcGalleryDao implements GalleryDao {
 
     @Override
     public void save(Gallery gallery) {
-        String sql = "INSERT INTO galerie (nom, adresse, note) VALUES (?, ?, ?)";
+        // Updated to handle id_organisateur which is required in the real schema
+        String sql = "INSERT INTO galerie (nom, adresse, note, id_organisateur) VALUES (?, ?, ?, (SELECT id_organisateur FROM organisateur LIMIT 1))";
         try (Connection conn = ConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             

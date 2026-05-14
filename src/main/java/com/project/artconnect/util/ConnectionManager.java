@@ -13,6 +13,11 @@ import java.sql.SQLException;
 public class ConnectionManager {
 
     public static Connection getConnection() throws SQLException {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            System.err.println("[ConnectionManager] Driver MySQL introuvable !");
+        }
         return DriverManager.getConnection(
                 DatabaseConfig.URL,
                 DatabaseConfig.USER,

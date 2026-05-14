@@ -11,20 +11,13 @@ import java.util.List;
 
 /**
  * Implémentation JDBC de ArtistDao.
- *
- * Table cible : artiste (id_artiste, nom, prenom, annee_naissance, email, ville, discipline)
- *
- * Note sur le nom : en base, le nom est stocké en deux colonnes "nom" et "prenom".
- * Dans le modèle Java, Artist.name contient "nom prenom" (concaténé).
- * On sépare sur le premier espace pour écrire en base.
  */
 public class JdbcArtistDao implements ArtistDao {
-
-    // ── Lecture ──────────────────────────────────────────────────────────────
 
     @Override
     public List<Artist> findAll() {
         List<Artist> artists = new ArrayList<>();
+        // Note: bio, phone, website, social_media are missing from the current DB schema
         String sql = "SELECT nom, prenom, annee_naissance, email, ville, discipline FROM artiste";
 
         try (Connection conn = ConnectionManager.getConnection();
@@ -62,8 +55,6 @@ public class JdbcArtistDao implements ArtistDao {
         return artists;
     }
 
-    // ── Écriture ─────────────────────────────────────────────────────────────
-
     @Override
     public void save(Artist artist) {
         String[] parts = splitName(artist.getName());
@@ -77,7 +68,7 @@ public class JdbcArtistDao implements ArtistDao {
 
             stmt.setString(1, parts[0]);
             stmt.setString(2, parts[1].isBlank() ? null : parts[1]);
-            stmt.setObject(3, artist.getBirthYear());   // null si non renseigné
+            stmt.setObject(3, artist.getBirthYear());
             stmt.setString(4, artist.getContactEmail());
             stmt.setString(5, artist.getCity());
             stmt.setString(6, discipline);
@@ -95,7 +86,6 @@ public class JdbcArtistDao implements ArtistDao {
         String discipline = artist.getDisciplines().isEmpty()
                 ? null : artist.getDisciplines().get(0).getName();
 
-        // On identifie l'artiste par son email (clé unique en base)
         String sql = "UPDATE artiste SET nom = ?, prenom = ?, ville = ?, discipline = ?, annee_naissance = ? WHERE email = ?";
 
         try (Connection conn = ConnectionManager.getConnection();
@@ -132,9 +122,6 @@ public class JdbcArtistDao implements ArtistDao {
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /** Construit un Artist depuis une ligne ResultSet. */
     private Artist mapRow(ResultSet rs) throws SQLException {
         Artist artist = new Artist();
 
@@ -154,7 +141,6 @@ public class JdbcArtistDao implements ArtistDao {
         return artist;
     }
 
-    /** Découpe "Nom Prenom" → ["Nom", "Prenom"]. Retourne ["Nom",""] si pas d'espace. */
     private String[] splitName(String fullName) {
         if (fullName == null || fullName.isBlank()) return new String[]{"", ""};
         int idx = fullName.indexOf(' ');

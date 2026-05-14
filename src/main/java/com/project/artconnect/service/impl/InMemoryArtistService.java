@@ -14,21 +14,28 @@ public class InMemoryArtistService implements ArtistService {
     private ArtistDao artistDao;
 
     public InMemoryArtistService() {
-        // Pour la compatibilité si besoin, mais on préfère passer le DAO
+        initData();
     }
 
     public InMemoryArtistService(ArtistDao artistDao) {
         this.artistDao = artistDao;
-        initData();
+        initDisciplines();
     }
 
-    private void initData() {
-        // Disciplines
+    private void initDisciplines() {
         addDiscipline("Painting");
         addDiscipline("Sculpture");
         addDiscipline("Photography");
         addDiscipline("Digital Art");
         addDiscipline("Music");
+    }
+
+    public void clear() {
+        artists.clear();
+    }
+
+    private void initData() {
+        initDisciplines();
 
         // Artists
         addArtist("Leonardo Vinci", "Renaissance master and polymath.", 1452, "leo@vincistudio.it", "Florence",
@@ -65,6 +72,13 @@ public class InMemoryArtistService implements ArtistService {
     @Override
     public Optional<Artist> getArtistByName(String name) {
         return Optional.ofNullable(artists.get(name));
+    }
+
+    /**
+     * Load an artist from DB into memory WITHOUT saving back to DB.
+     */
+    public void loadArtist(Artist artist) {
+        artists.put(artist.getName(), artist);
     }
 
     @Override

@@ -20,17 +20,20 @@ public class InMemoryWorkshopService implements WorkshopService {
 
     public InMemoryWorkshopService() {
         this.workshopDao = null;
+        // Basic init if no DAO
+    }
+
+    public void clear() {
+        workshops.clear();
     }
 
     public void initData(ArtistService artistService) {
-        if (workshopDao == null) {
-            addWorkshop("Mastering Oil Painting", LocalDateTime.now().plusDays(5),
-                    artistService.getArtistByName("Leonardo Vinci").orElse(null), 150.0, "Intermediate", "Florence Studio");
-            addWorkshop("Impressionist Landscapes", LocalDateTime.now().plusDays(10),
-                    artistService.getArtistByName("Claude Monet").orElse(null), 120.0, "Beginner", "Giverny Gardens");
-            addWorkshop("Sculpting Modernity", LocalDateTime.now().plusDays(15),
-                    artistService.getArtistByName("Auguste Rodin").orElse(null), 200.0, "Advanced", "Paris Workshop");
-        }
+        if (workshopDao != null || artistService == null) return;
+        // Dummy data for memory-only mode
+    }
+
+    public void loadWorkshop(Workshop w) {
+        workshops.put(w.getTitle(), w);
     }
 
     private void addWorkshop(String title, LocalDateTime date, Artist instructor, double price, String level,
@@ -47,17 +50,11 @@ public class InMemoryWorkshopService implements WorkshopService {
 
     @Override
     public List<Workshop> getAllWorkshops() {
-        if (workshopDao != null) {
-            return workshopDao.findAll();
-        }
         return new ArrayList<>(workshops.values());
     }
 
     @Override
     public Optional<Workshop> getWorkshopByTitle(String title) {
-        if (workshopDao != null) {
-            return workshopDao.findAll().stream().filter(w -> w.getTitle().equals(title)).findFirst();
-        }
         return Optional.ofNullable(workshops.get(title));
     }
 
@@ -78,28 +75,25 @@ public class InMemoryWorkshopService implements WorkshopService {
 
     @Override
     public void saveWorkshop(Workshop workshop) {
+        workshops.put(workshop.getTitle(), workshop);
         if (workshopDao != null) {
             workshopDao.save(workshop);
-        } else {
-            workshops.put(workshop.getTitle(), workshop);
         }
     }
 
     @Override
     public void updateWorkshop(Workshop workshop) {
+        workshops.put(workshop.getTitle(), workshop);
         if (workshopDao != null) {
             workshopDao.update(workshop);
-        } else {
-            workshops.put(workshop.getTitle(), workshop);
         }
     }
 
     @Override
     public void deleteWorkshop(String title) {
+        workshops.remove(title);
         if (workshopDao != null) {
             workshopDao.delete(title);
-        } else {
-            workshops.remove(title);
         }
     }
 

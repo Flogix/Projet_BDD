@@ -22,32 +22,27 @@ public class InMemoryGalleryService implements GalleryService {
     public InMemoryGalleryService() {
         this.galleryDao = null;
         this.exhibitionDao = null;
+        // Basic init if no DAO
+        Gallery louvre = addGallery("Louvre Art House", "Rue de Rivoli, Paris", 4.9);
+    }
+
+    public void clear() {
+        galleries.clear();
     }
 
     public void initData(ArtworkService artworkService) {
-        if (galleryDao == null) {
-            Gallery louvre = addGallery("Louvre Art House", "Rue de Rivoli, Paris", 4.9);
-            Gallery british = addGallery("The British Gallery", "Great Russell St, London", 4.7);
-            Gallery met = addGallery("Metropolitan Hub", "1000 5th Ave, New York", 4.8);
-
-            // Add Exhibitions
-            addExhibition("Renaissance Revival", LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(2), louvre,
-                    "Dr. Elena Rossi", "Classic Renaissance",
-                    artworkService.getArtworkByTitle("Mona Lisa").orElse(null),
-                    artworkService.getArtworkByTitle("The Last Supper").orElse(null));
-
-            addExhibition("Sculpting the Soul", LocalDate.now().minusDays(15), LocalDate.now().plusMonths(1), british,
-                    "Marcus Thorne", "Modern & Classical Sculpture",
-                    artworkService.getArtworkByTitle("The Thinker").orElse(null));
-
-            addExhibition("Impressionist Dreams", LocalDate.now().minusMonths(2), LocalDate.now().plusMonths(3), met,
-                    "Sarah Jenkins", "Light and Color",
-                    artworkService.getArtworkByTitle("Water Lilies").orElse(null));
-        }
+        if (galleryDao != null || artworkService == null) return;
+        // Dummy data only for memory-only mode
     }
     
-    public void createGallery(Gallery g) {
+    public void loadGallery(Gallery g) {
         galleries.put(g.getName(), g);
+    }
+
+    public void loadExhibition(Exhibition e) {
+        if (e.getGallery() != null) {
+            e.getGallery().addExhibition(e);
+        }
     }
 
     private Gallery addGallery(String name, String address, double rating) {
@@ -56,76 +51,53 @@ public class InMemoryGalleryService implements GalleryService {
         return g;
     }
 
-    private void addExhibition(String title, LocalDate start, LocalDate end, Gallery gallery, String curator,
-            String theme, Artwork... artworks) {
-        Exhibition e = new Exhibition(title, start, end, gallery);
-        e.setCuratorName(curator);
-        e.setTheme(theme);
-        for (Artwork a : artworks) {
-            if (a != null)
-                e.getArtworks().add(a);
-        }
-        gallery.addExhibition(e);
-    }
-
     @Override
     public List<Gallery> getAllGalleries() {
-        if (galleryDao != null) {
-            return galleryDao.findAll();
-        }
         return new ArrayList<>(galleries.values());
     }
 
     @Override
     public Optional<Gallery> getGalleryByName(String name) {
-        if (galleryDao != null) {
-            return galleryDao.findAll().stream().filter(g -> g.getName().equals(name)).findFirst();
-        }
         return Optional.ofNullable(galleries.get(name));
     }
 
     @Override
     public List<Exhibition> getExhibitionsForGallery(Gallery gallery) {
-        if (gallery == null)
-            return Collections.emptyList();
+        if (gallery == null) return Collections.emptyList();
         return gallery.getExhibitions();
     }
 
     @Override
     public void saveGallery(Gallery gallery) {
+        galleries.put(gallery.getName(), gallery);
         if (galleryDao != null) {
             galleryDao.save(gallery);
-        } else {
-            galleries.put(gallery.getName(), gallery);
         }
     }
 
     @Override
     public void updateGallery(Gallery gallery) {
+        galleries.put(gallery.getName(), gallery);
         if (galleryDao != null) {
             galleryDao.update(gallery);
-        } else {
-            galleries.put(gallery.getName(), gallery);
         }
     }
 
     @Override
     public void deleteGallery(String name) {
+        galleries.remove(name);
         if (galleryDao != null) {
             galleryDao.delete(name);
-        } else {
-            galleries.remove(name);
         }
     }
 
     @Override
     public void saveExhibition(Exhibition exhibition) {
+        if (exhibition.getGallery() != null) {
+            exhibition.getGallery().addExhibition(exhibition);
+        }
         if (exhibitionDao != null) {
             exhibitionDao.save(exhibition);
-        } else {
-            if (exhibition.getGallery() != null) {
-                exhibition.getGallery().addExhibition(exhibition);
-            }
         }
     }
 
@@ -138,21 +110,16 @@ public class InMemoryGalleryService implements GalleryService {
 
     @Override
     public void deleteExhibition(String title) {
+        for (Gallery g : galleries.values()) {
+            g.getExhibitions().removeIf(e -> e.getTitle().equals(title));
+        }
         if (exhibitionDao != null) {
             exhibitionDao.delete(title);
-        } else {
-            // Remove from all galleries
-            for (Gallery g : galleries.values()) {
-                g.getExhibitions().removeIf(e -> e.getTitle().equals(title));
-            }
         }
     }
 
     @Override
     public List<Exhibition> getAllExhibitions() {
-        if (exhibitionDao != null) {
-            return exhibitionDao.findAll();
-        }
         List<Exhibition> all = new ArrayList<>();
         for (Gallery g : galleries.values()) {
             all.addAll(g.getExhibitions());

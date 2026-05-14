@@ -12,6 +12,8 @@ public interface CommunityService {
 
     List<Review> getReviewsByMember(CommunityMember member);
 
+    void loadMember(CommunityMember member);
+
     void saveMember(CommunityMember member);
 
     void updateMember(CommunityMember member);

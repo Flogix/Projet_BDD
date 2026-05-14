@@ -15,10 +15,11 @@ public class JdbcWorkshopDao implements WorkshopDao {
     @Override
     public Optional<Workshop> findById(Long id) {
         String sql = """
-                SELECT id_atelier, titre_atelier, date_heure, prix, 
-                       nom_instructeur, prenom_instructeur
-                FROM vue_details_ateliers
-                WHERE id_atelier = ?
+                SELECT w.id_atelier, w.titre, w.date_heure, w.prix, w.niveau,
+                       a.nom, a.prenom
+                FROM atelier w
+                LEFT JOIN artiste a ON w.id_artiste = a.id_artiste
+                WHERE w.id_atelier = ?
                 """;
         try (Connection conn = ConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -38,19 +39,18 @@ public class JdbcWorkshopDao implements WorkshopDao {
     @Override
     public List<Workshop> findAll() {
         List<Workshop> workshops = new ArrayList<>();
-        // Query the table via the view
         String sql = """
-                SELECT id_atelier, titre_atelier, date_heure, prix, 
-                       nom_instructeur, prenom_instructeur
-                FROM vue_details_ateliers
+                SELECT w.id_atelier, w.titre, w.date_heure, w.prix, w.niveau,
+                       a.nom, a.prenom
+                FROM atelier w
+                LEFT JOIN artiste a ON w.id_artiste = a.id_artiste
                 """;
         try (Connection conn = ConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             
             while (rs.next()) {
-                Workshop w = mapRow(rs);
-                workshops.add(w);
+                workshops.add(mapRow(rs));
             }
         } catch (SQLException e) {
             System.err.println("[JdbcWorkshopDao] findAll() : " + e.getMessage());
@@ -62,8 +62,8 @@ public class JdbcWorkshopDao implements WorkshopDao {
     public void save(Workshop workshop) {
         String[] parts = splitName(workshop.getInstructor() != null ? workshop.getInstructor().getName() : "");
         String sql = """
-                INSERT INTO atelier (titre, date_heure, prix, id_artiste)
-                VALUES (?, ?, ?, 
+                INSERT INTO atelier (titre, date_heure, prix, niveau, id_artiste)
+                VALUES (?, ?, ?, ?,
                     (SELECT id_artiste FROM artiste WHERE nom = ? AND (prenom = ? OR prenom IS NULL) LIMIT 1))
                 """;
         try (Connection conn = ConnectionManager.getConnection();
@@ -72,8 +72,9 @@ public class JdbcWorkshopDao implements WorkshopDao {
             stmt.setString(1, workshop.getTitle());
             stmt.setTimestamp(2, workshop.getDate() != null ? Timestamp.valueOf(workshop.getDate()) : null);
             stmt.setDouble(3, workshop.getPrice());
-            stmt.setString(4, parts[0]);
-            stmt.setString(5, parts[1].isBlank() ? null : parts[1]);
+            stmt.setString(4, workshop.getLevel());
+            stmt.setString(5, parts[0]);
+            stmt.setString(6, parts[1].isBlank() ? null : parts[1]);
             
             stmt.executeUpdate();
             
@@ -86,7 +87,7 @@ public class JdbcWorkshopDao implements WorkshopDao {
     public void update(Workshop workshop) {
         String[] parts = splitName(workshop.getInstructor() != null ? workshop.getInstructor().getName() : "");
         String sql = """
-                UPDATE atelier SET date_heure = ?, prix = ?,
+                UPDATE atelier SET date_heure = ?, prix = ?, niveau = ?,
                 id_artiste = (SELECT id_artiste FROM artiste WHERE nom = ? AND (prenom = ? OR prenom IS NULL) LIMIT 1)
                 WHERE titre = ?
                 """;
@@ -95,9 +96,10 @@ public class JdbcWorkshopDao implements WorkshopDao {
             
             stmt.setTimestamp(1, workshop.getDate() != null ? Timestamp.valueOf(workshop.getDate()) : null);
             stmt.setDouble(2, workshop.getPrice());
-            stmt.setString(3, parts[0]);
-            stmt.setString(4, parts[1].isBlank() ? null : parts[1]);
-            stmt.setString(5, workshop.getTitle());
+            stmt.setString(3, workshop.getLevel());
+            stmt.setString(4, parts[0]);
+            stmt.setString(5, parts[1].isBlank() ? null : parts[1]);
+            stmt.setString(6, workshop.getTitle());
             
             stmt.executeUpdate();
             
@@ -122,6 +124,7 @@ public class JdbcWorkshopDao implements WorkshopDao {
 
     @Override
     public double calculateMaxRevenue(String title) {
+        // Current DB schema uses prix and places_max
         String sql = "SELECT (prix * places_max) FROM atelier WHERE titre = ?";
         try (Connection conn = ConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -139,7 +142,7 @@ public class JdbcWorkshopDao implements WorkshopDao {
 
     private Workshop mapRow(ResultSet rs) throws SQLException {
         Workshop workshop = new Workshop();
-        workshop.setTitle(rs.getString("titre_atelier"));
+        workshop.setTitle(rs.getString("titre"));
         
         Timestamp timestamp = rs.getTimestamp("date_heure");
         if (timestamp != null) {
@@ -147,10 +150,11 @@ public class JdbcWorkshopDao implements WorkshopDao {
         }
         
         workshop.setPrice(rs.getDouble("prix"));
+        workshop.setLevel(rs.getString("niveau"));
         
-        String instNom = rs.getString("nom_instructeur");
+        String instNom = rs.getString("nom");
         if (instNom != null) {
-            String instPrenom = rs.getString("prenom_instructeur");
+            String instPrenom = rs.getString("prenom");
             Artist artist = new Artist();
             artist.setName(instNom + (instPrenom != null && !instPrenom.isBlank() ? " " + instPrenom : ""));
             workshop.setInstructor(artist);

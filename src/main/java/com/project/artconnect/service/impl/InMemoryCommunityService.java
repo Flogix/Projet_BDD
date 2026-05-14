@@ -70,6 +70,11 @@ public class InMemoryCommunityService implements CommunityService {
     }
 
     @Override
+    public void loadMember(CommunityMember member) {
+        members.put(member.getName(), member);
+    }
+
+    @Override
     public void saveMember(CommunityMember member) {
         if (communityMemberDao != null) {
             communityMemberDao.save(member);

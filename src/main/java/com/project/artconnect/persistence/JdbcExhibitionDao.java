@@ -14,8 +14,12 @@ public class JdbcExhibitionDao implements ExhibitionDao {
     @Override
     public List<Exhibition> findAll() {
         List<Exhibition> exhibitions = new ArrayList<>();
-        // Use the view to get exhibition details + gallery info easily
-        String sql = "SELECT titre_expo, date_debut, date_fin, theme, nom_galerie, adresse FROM vue_details_expositions";
+        // Note: view v_exposition_details is missing, using direct join
+        String sql = """
+                SELECT e.titre, e.date_debut, e.date_fin, e.theme, g.nom, g.adresse
+                FROM exposition e
+                LEFT JOIN galerie g ON e.id_galerie = g.id_galerie
+                """;
         
         try (Connection conn = ConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -92,7 +96,7 @@ public class JdbcExhibitionDao implements ExhibitionDao {
 
     private Exhibition mapRow(ResultSet rs) throws SQLException {
         Exhibition exhibition = new Exhibition();
-        exhibition.setTitle(rs.getString("titre_expo"));
+        exhibition.setTitle(rs.getString("titre"));
         Date startDate = rs.getDate("date_debut");
         Date endDate = rs.getDate("date_fin");
         
@@ -101,7 +105,7 @@ public class JdbcExhibitionDao implements ExhibitionDao {
         
         exhibition.setTheme(rs.getString("theme"));
         
-        String galleryName = rs.getString("nom_galerie");
+        String galleryName = rs.getString("nom");
         if (galleryName != null) {
             Gallery gallery = new Gallery();
             gallery.setName(galleryName);

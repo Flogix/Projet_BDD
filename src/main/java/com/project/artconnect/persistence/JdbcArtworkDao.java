@@ -11,27 +11,19 @@ import java.util.List;
 
 /**
  * Implémentation JDBC de ArtworkDao.
- *
- * Table cible : oeuvre (id_oeuvre, titre, type, prix, statut, id_artiste)
- * Join avec   : artiste (id_artiste, nom, prenom)
- *
- * Mapping statut BD ↔ Java :
- *   "Disponible" → Status.FOR_SALE
- *   "Vendu"      → Status.SOLD
- *   "Réservé"    → Status.EXHIBITED
  */
 public class JdbcArtworkDao implements ArtworkDao {
-
-    // ── Lecture ──────────────────────────────────────────────────────────────
 
     @Override
     public List<Artwork> findAll() {
         List<Artwork> artworks = new ArrayList<>();
+        // Limiting to 1000 for memory performance with large datasets
         String sql = """
                 SELECT o.titre, o.type, o.prix, o.statut,
                        a.nom, a.prenom
                 FROM oeuvre o
-                JOIN artiste a ON o.id_artiste = a.id_artiste
+                LEFT JOIN artiste a ON o.id_artiste = a.id_artiste
+                LIMIT 1000
                 """;
 
         try (Connection conn = ConnectionManager.getConnection();
@@ -78,11 +70,8 @@ public class JdbcArtworkDao implements ArtworkDao {
         return artworks;
     }
 
-    // ── Écriture ─────────────────────────────────────────────────────────────
-
     @Override
     public void save(Artwork artwork) {
-        // Sous-requête pour récupérer id_artiste depuis le nom de l'artiste
         String[] parts = splitName(artwork.getArtist() != null ? artwork.getArtist().getName() : "");
         String statut = toDbStatut(artwork.getStatus());
 
@@ -144,8 +133,6 @@ public class JdbcArtworkDao implements ArtworkDao {
             System.err.println("[JdbcArtworkDao] delete() : " + e.getMessage());
         }
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private Artwork mapRow(ResultSet rs) throws SQLException {
         Artist artist = new Artist();

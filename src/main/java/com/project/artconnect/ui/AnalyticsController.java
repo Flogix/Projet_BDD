@@ -1,7 +1,6 @@
 package com.project.artconnect.ui;
 
 import com.project.artconnect.util.ConnectionManager;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,18 +11,6 @@ import java.sql.*;
 
 /**
  * Contrôleur pour l'onglet Analytics.
- *
- * Toutes les données viennent directement de la base via des requêtes SQL
- * exploitant les vues et tables de la base artconnect.
- *
- * Statistiques affichées :
- *  - Nombre total d'artistes
- *  - Nombre total d'œuvres
- *  - Prix moyen des œuvres
- *  - Œuvre la plus chère (utilise la vue vue_oeuvres_disponibles)
- *  - Artistes par ville
- *  - Top artistes par nombre d'œuvres (utilise vue_statistiques_artistes)
- *  - Galeries classées par note (utilise vue_stats_galeries)
  */
 public class AnalyticsController {
 
@@ -87,180 +74,116 @@ public class AnalyticsController {
     }
 
     private void loadAllStats() {
+        System.out.println("[AnalyticsController] Chargement des statistiques...");
         try (Connection conn = ConnectionManager.getConnection()) {
             loadKpis(conn);
             loadCityStats(conn);
             loadTopArtists(conn);
             loadGalleryRanking(conn);
             loadUpcomingEvents(conn);
+            System.out.println("[AnalyticsController] Statistiques chargées avec succès.");
         } catch (SQLException e) {
-            System.err.println("[AnalyticsController] Erreur connexion : " + e.getMessage());
-            labelNbArtists.setText("N/A");
-            labelNbArtworks.setText("N/A");
-            labelAvgPrice.setText("N/A");
-            labelTotalSales.setText("N/A");
-            labelMostExpensive.setText("Base non disponible");
+            System.err.println("[AnalyticsController] Erreur : " + e.getMessage());
         }
     }
 
-    // ── KPI : totaux + prix moyen + œuvre la plus chère ──────────────────
-
     private void loadKpis(Connection conn) throws SQLException {
-
-        // Nombre d'artistes
+        // Nb Artistes
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM artiste")) {
-            if (rs.next()) labelNbArtists.setText(String.valueOf(rs.getInt(1)));
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                labelNbArtists.setText(String.valueOf(count));
+                System.out.println("[AnalyticsController] Artistes : " + count);
+            }
         }
 
-        // Nombre d'œuvres (dédoublonné par titre pour éviter les faux positifs)
+        // Nb Oeuvres
         try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT COUNT(DISTINCT titre) FROM oeuvre")) {
+             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM oeuvre")) {
             if (rs.next()) labelNbArtworks.setText(String.valueOf(rs.getInt(1)));
         }
 
-        // Prix moyen (dédoublonné)
+        // Prix Moyen
         try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT AVG(prix) FROM (SELECT MIN(prix) as prix FROM oeuvre GROUP BY titre) AS uo")) {
-            if (rs.next()) {
-                double avg = rs.getDouble(1);
-                labelAvgPrice.setText(String.format("%.0f €", avg));
-            }
+             ResultSet rs = stmt.executeQuery("SELECT AVG(prix) FROM oeuvre")) {
+            if (rs.next()) labelAvgPrice.setText(String.format("%.0f €", rs.getDouble(1)));
         }
 
-        // Ventes Totales — remplace la vue par une requête robuste et fiable, dédoublonnée
+        // Ventes
         try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT SUM(prix) FROM (SELECT MIN(prix) as prix FROM oeuvre WHERE statut = 'Vendu' GROUP BY titre) AS uv")) {
-            if (rs.next()) {
-                double total = rs.getDouble(1);
-                labelTotalSales.setText(String.format("%.0f €", total));
-            }
+             ResultSet rs = stmt.executeQuery("SELECT SUM(prix) FROM oeuvre WHERE statut = 'Vendu'")) {
+            if (rs.next()) labelTotalSales.setText(String.format("%.0f €", rs.getDouble(1)));
         }
 
-        // Œuvre la plus chère
-        String sqlMostExpensive = """
-                SELECT o.titre, o.prix, CONCAT(a.nom,' ',IFNULL(a.prenom,'')) AS artiste
-                FROM oeuvre o
-                JOIN artiste a ON o.id_artiste = a.id_artiste
-                GROUP BY o.titre, o.prix, a.nom, a.prenom
-                ORDER BY o.prix DESC
-                LIMIT 1
-                """;
+        // Plus chère
+        String sql = "SELECT o.titre, o.prix FROM oeuvre o ORDER BY o.prix DESC LIMIT 1";
         try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sqlMostExpensive)) {
-            if (rs.next()) {
-                labelMostExpensive.setText(String.format("%s\n%.0f €\n(%s)",
-                        rs.getString("titre"),
-                        rs.getDouble("prix"),
-                        rs.getString("artiste")));
-            }
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) labelMostExpensive.setText(rs.getString("titre") + " (" + rs.getDouble("prix") + " €)");
         }
     }
 
-    // ── Artistes par ville ────────────────────────────────────────────────
-
     private void loadCityStats(Connection conn) throws SQLException {
-        String sql = """
-                SELECT ville, COUNT(*) AS nb_artistes
-                FROM artiste
-                WHERE ville IS NOT NULL
-                GROUP BY ville
-                ORDER BY nb_artistes DESC
-                """;
-
+        String sql = "SELECT ville, COUNT(*) FROM artiste GROUP BY ville ORDER BY 2 DESC";
         ObservableList<String[]> data = FXCollections.observableArrayList();
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                data.add(new String[]{
-                        rs.getString("ville"),
-                        String.valueOf(rs.getInt("nb_artistes"))
-                });
+                data.add(new String[]{rs.getString(1), rs.getString(2)});
             }
         }
         cityTable.setItems(data);
     }
 
-    // ── Top artistes — remplace la vue boguée par une requête fiable ──────────
-
     private void loadTopArtists(Connection conn) throws SQLException {
-        // Utilisation d'une requête robuste avec dédoublonnage pour éviter les produits cartésiens
         String sql = """
-                SELECT CONCAT(a.nom,' ',IFNULL(a.prenom,'')) AS artiste,
-                       COUNT(uo.id_oeuvre) AS total_oeuvres,
-                       IFNULL(SUM(uo.prix), 0) AS valeur
+                SELECT CONCAT(a.nom, ' ', a.prenom), COUNT(o.id_oeuvre), SUM(o.prix)
                 FROM artiste a
-                LEFT JOIN (
-                    SELECT id_artiste, titre, MIN(id_oeuvre) as id_oeuvre, MIN(prix) as prix
-                    FROM oeuvre
-                    GROUP BY id_artiste, titre
-                ) uo ON a.id_artiste = uo.id_artiste
-                GROUP BY a.id_artiste, a.nom, a.prenom
-                ORDER BY total_oeuvres DESC, valeur DESC
-                LIMIT 10
+                JOIN oeuvre o ON a.id_artiste = o.id_artiste
+                GROUP BY a.id_artiste
+                ORDER BY 2 DESC LIMIT 5
                 """;
-
         ObservableList<String[]> data = FXCollections.observableArrayList();
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                data.add(new String[]{
-                        rs.getString("artiste"),
-                        String.valueOf(rs.getInt("total_oeuvres")),
-                        String.format("%.0f €", rs.getDouble("valeur"))
-                });
+                data.add(new String[]{rs.getString(1), rs.getString(2), rs.getString(3) + " €"});
             }
         }
         topArtistTable.setItems(data);
     }
 
-    // ── Galeries classées par note — utilise vue_stats_galeries ──────────
-
     private void loadGalleryRanking(Connection conn) throws SQLException {
-        // On utilise directement la vue créée à l'étape 3
         String sql = """
-                SELECT nom, note, nombre_expositions
-                FROM vue_stats_galeries
-                ORDER BY note DESC, nombre_expositions DESC
+                SELECT g.nom, g.note, COUNT(e.id_exposition)
+                FROM galerie g
+                LEFT JOIN exposition e ON g.id_galerie = e.id_galerie
+                GROUP BY g.id_galerie
+                ORDER BY g.note DESC
                 """;
-
         ObservableList<String[]> data = FXCollections.observableArrayList();
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                data.add(new String[]{
-                        rs.getString("nom"),
-                        String.valueOf(rs.getInt("note")) + " / 5",
-                        String.valueOf(rs.getInt("nombre_expositions"))
-                });
+                data.add(new String[]{rs.getString(1), rs.getString(2) + "/5", rs.getString(3)});
             }
         }
         galleryRankTable.setItems(data);
     }
 
-    // ── Evénements récents — pour éviter le tableau vide si les dates sont passées ──────────────
-
     private void loadUpcomingEvents(Connection conn) throws SQLException {
         String sql = """
-                SELECT 'Exposition' AS type_evenement, titre, date_debut AS date_evenement
-                FROM exposition
+                SELECT 'Exposition', titre, date_debut FROM exposition
                 UNION ALL
-                SELECT 'Atelier' AS type_evenement, titre, DATE(date_heure) AS date_evenement
-                FROM atelier
-                ORDER BY date_evenement DESC
-                LIMIT 15
+                SELECT 'Atelier', titre, DATE(date_heure) FROM atelier
+                ORDER BY 3 DESC LIMIT 10
                 """;
-
         ObservableList<String[]> data = FXCollections.observableArrayList();
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                Date date = rs.getDate("date_evenement");
-                data.add(new String[]{
-                        rs.getString("type_evenement"),
-                        rs.getString("titre"),
-                        date != null ? date.toString() : ""
-                });
+                data.add(new String[]{rs.getString(1), rs.getString(2), rs.getString(3)});
             }
         }
         eventsTable.setItems(data);
